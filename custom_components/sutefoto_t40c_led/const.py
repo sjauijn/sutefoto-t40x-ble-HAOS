@@ -1,5 +1,0 @@
-DOMAIN = "sutefoto_t40c_led"
-CONF_MAC = "mac"
-
-MIN_CCT_KELVIN = 2800
-MAX_CCT_KELVIN = 10000
