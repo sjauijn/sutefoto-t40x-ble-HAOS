@@ -44,6 +44,7 @@ class SuteFotoLight(LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
+    _attr_assumed_state = True
     _attr_supported_color_modes = {ColorMode.HS, ColorMode.COLOR_TEMP}
     _attr_min_color_temp_kelvin = MIN_CCT_KELVIN
     _attr_max_color_temp_kelvin = MAX_CCT_KELVIN
@@ -60,10 +61,10 @@ class SuteFotoLight(LightEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        self._device.on_update = self.async_write_ha_state
+        self.async_on_remove(self._device.add_listener(self.async_write_ha_state))
 
     async def async_will_remove_from_hass(self) -> None:
-        self._device.on_update = None
+        pass
 
     @property
     def is_on(self) -> bool:

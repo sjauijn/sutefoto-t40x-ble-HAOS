@@ -3,15 +3,25 @@
     "step": {
       "user": {
         "title": "Add SuteFoto LED",
-        "description": "Select a discovered light or enter its Bluetooth MAC address manually (found via a BLE scanner app, e.g. nRF Connect).",
+        "description": "A device was discovered nearby. Select it, or choose manual entry to type a MAC address.",
         "data": {
           "mac": "Light"
+        }
+      },
+      "manual": {
+        "title": "Enter MAC address",
+        "description": "Enter the Bluetooth MAC address of your SuteFoto light (find it with a BLE scanner app, e.g. nRF Connect — look for a device named like ST40CRGB-XXXXXX).",
+        "data": {
+          "mac": "MAC address"
         }
       },
       "bluetooth_confirm": {
         "title": "Discovered SuteFoto LED",
         "description": "Do you want to set up {name}?"
       }
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format. Expected something like AA:BB:CC:DD:EE:FF."
     },
     "abort": {
       "already_configured": "This light is already configured"

@@ -51,31 +51,58 @@ class SuteFotoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initiated by the user, manual MAC entry."""
-        errors: dict[str, str] = {}
-
+        """Handle a flow initiated by the user: pick a discovered device or go manual."""
         discovered: dict[str, str] = {}
         for info in async_discovered_service_info(self.hass, connectable=True):
             name = (info.name or "").upper()
             if name.startswith("ST40") or name.startswith("SUTEFOTO"):
                 discovered[info.address] = f"{info.name} ({info.address})"
 
+        if not discovered:
+            # Nothing found via scanning - go straight to manual entry.
+            return await self.async_step_manual()
+
         if user_input is not None:
-            mac = user_input[CONF_MAC].strip().upper()
+            mac = user_input[CONF_MAC]
+            if mac == "manual":
+                return await self.async_step_manual()
             await self.async_set_unique_id(format_mac(mac))
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"SuteFoto LED ({mac})",
+                title=discovered[mac],
                 data={CONF_MAC: mac},
             )
 
-        if discovered:
-            schema = vol.Schema(
-                {vol.Required(CONF_MAC): vol.In(discovered)}
-            )
-        else:
-            schema = vol.Schema({vol.Required(CONF_MAC): str})
+        options = {**discovered, "manual": "Enter MAC address manually…"}
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_MAC): vol.In(options)}),
+        )
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle manual MAC address entry."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            mac_raw = user_input[CONF_MAC].strip()
+            try:
+                mac = format_mac(mac_raw).upper()
+            except ValueError:
+                mac = ""
+            if not mac or len(mac.replace(":", "")) != 12:
+                errors["base"] = "invalid_mac"
+            else:
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"SuteFoto LED ({mac})",
+                    data={CONF_MAC: mac},
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
+            step_id="manual",
+            data_schema=vol.Schema({vol.Required(CONF_MAC): str}),
+            errors=errors,
         )

@@ -67,7 +67,20 @@ class SuteFotoDevice:
         self._lock = asyncio.Lock()
         self._disconnect_timer: asyncio.TimerHandle | None = None
         self.state = SuteFotoState()
-        self.on_update: Callable[[], None] | None = None
+        self._listeners: list[Callable[[], None]] = []
+
+    def add_listener(self, callback: Callable[[], None]) -> Callable[[], None]:
+        """Register a callback to be notified on state changes.
+
+        Returns a function that removes the listener again.
+        """
+        self._listeners.append(callback)
+
+        def _remove() -> None:
+            if callback in self._listeners:
+                self._listeners.remove(callback)
+
+        return _remove
 
     def set_ble_device(self, ble_device: BLEDevice) -> None:
         self._ble_device = ble_device
@@ -88,11 +101,10 @@ class SuteFotoDevice:
         async with self._lock:
             client = await self._ensure_connected()
             await client.write_gatt_char(CHAR_UUID, data, response=False)
-        self._notify()
 
     def _notify(self) -> None:
-        if self.on_update is not None:
-            self.on_update()
+        for listener in list(self._listeners):
+            listener()
 
     async def async_disconnect(self) -> None:
         if self._client is not None and self._client.is_connected:
@@ -107,31 +119,32 @@ class SuteFotoDevice:
         brightness = s.brightness_pct if s.is_on else 0
 
         if s.mode == MODE_HSI:
-            await self._write(
-                protocol.build_hsi(brightness, s.saturation, s.hue)
-            )
+            data = protocol.build_hsi(brightness, s.saturation, s.hue)
         elif s.mode == MODE_CCT:
-            await self._write(
-                protocol.build_cct(brightness, s.cct_kelvin, s.gm_compensation)
-            )
+            data = protocol.build_cct(brightness, s.cct_kelvin, s.gm_compensation)
         elif s.mode == MODE_RGBCW:
             if s.is_on:
-                await self._write(
-                    protocol.build_rgbcw(
-                        s.rgbcw_red,
-                        s.rgbcw_green,
-                        s.rgbcw_blue,
-                        s.rgbcw_less_warm,
-                        s.rgbcw_more_warm,
-                    )
+                data = protocol.build_rgbcw(
+                    s.rgbcw_red,
+                    s.rgbcw_green,
+                    s.rgbcw_blue,
+                    s.rgbcw_less_warm,
+                    s.rgbcw_more_warm,
                 )
             else:
-                await self._write(protocol.build_rgbcw(0, 0, 0, 0, 0))
+                data = protocol.build_rgbcw(0, 0, 0, 0, 0)
         elif s.mode == MODE_FX:
             fx_intensity = max(10, brightness) if s.is_on else 10
-            await self._write(
-                protocol.build_fx(s.fx_effect, s.fx_frequency, fx_intensity)
-            )
+            data = protocol.build_fx(s.fx_effect, s.fx_frequency, fx_intensity)
+        else:
+            return
+
+        # Reflect the new state in the UI immediately - the light itself
+        # has no way to report its state back, so we treat the command we
+        # are about to send as authoritative right away instead of waiting
+        # for the (possibly slow, possibly failing) BLE write to finish.
+        self._notify()
+        await self._write(data)
 
     async def async_turn_on(self, brightness_pct: int | None = None) -> None:
         s = self.state

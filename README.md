@@ -1,7 +1,8 @@
 # SuteFoto LED Light — Home Assistant Integration
 
-Custom Home Assistant integration for the **SuteFoto T40X RGB** professional light
-(the one controlled by the "[SS LED](https://play.google.com/store/apps/details?id=com.zzcyi.sutudengjv)" app), connected directly over Bluetooth LE.
+Custom Home Assistant integration for the **SuteFoto T40X/T40C RGB** video light
+(the one controlled by the "SS LED" app), connected directly over Bluetooth LE —
+no cloud, no hub required.
 
 The BLE protocol was reverse engineered from BLE HCI snoop logs of the official app.
 
@@ -18,7 +19,7 @@ The BLE protocol was reverse engineered from BLE HCI snoop logs of the official 
 
 1. HACS → Integrations → ⋮ menu (top right) → **Custom repositories**
 2. Add this repository URL, category **Integration**
-3. Install **SuteFoto T40X RGB BLE**, restart Home Assistant
+3. Install **SuteFoto LED Light**, restart Home Assistant
 
 ## Setup
 

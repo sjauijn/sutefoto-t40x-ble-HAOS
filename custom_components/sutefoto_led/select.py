@@ -60,10 +60,7 @@ class _BaseSelect(SelectEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        self._device.on_update = self.async_write_ha_state
-
-    async def async_will_remove_from_hass(self) -> None:
-        self._device.on_update = None
+        self.async_on_remove(self._device.add_listener(self.async_write_ha_state))
 
 
 class SuteFotoModeSelect(_BaseSelect):
