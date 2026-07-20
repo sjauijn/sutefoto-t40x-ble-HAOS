@@ -1,6 +1,6 @@
 # SuteFoto LED Light — Home Assistant Integration
 
-Custom Home Assistant integration for the **SuteFoto T40X/T40C RGB** video light
+Custom Home Assistant integration for the **SuteFoto T40X RGB** video light
 (the one controlled by the "SS LED" app), connected directly over Bluetooth LE —
 no cloud, no hub required.
 
