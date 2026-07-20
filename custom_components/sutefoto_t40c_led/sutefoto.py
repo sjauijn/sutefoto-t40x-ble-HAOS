@@ -140,13 +140,19 @@ class SuteFotoInstance:
         await self._write(data)
 
 
-    async def async_turn_on(self, brightness_pct: int | None = None) -> None:
+    async def async_turn_on(
+        self, brightness_pct: int | None = None, mode_changed: bool = False
+    ) -> None:
+        was_off = not self.is_on
         self.is_on = True
         if brightness_pct is not None:
             self.brightness_pct = max(1, brightness_pct)
         elif self.brightness_pct <= 0:
             self.brightness_pct = self._last_brightness_pct or 100
         await self._send_current_mode()
+        if was_off and mode_changed:
+            await asyncio.sleep(0.5)
+            await self._send_current_mode()
 
     async def async_turn_off(self) -> None:
         if self.brightness_pct > 0:

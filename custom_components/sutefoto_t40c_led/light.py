@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_MAC, DOMAIN, MAX_CCT_KELVIN, MIN_CCT_KELVIN
-from .sutefoto import MODE_CCT, SuteFotoInstance
+from .sutefoto import MODE_CCT, MODE_HSI, SuteFotoInstance
 
 PARALLEL_UPDATES = 0
 
@@ -79,11 +79,14 @@ class SuteFotoLight(LightEntity):
         return self._instance.cct_kelvin
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        mode_changed = False
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            mode_changed = self._instance.mode != MODE_CCT
             await self._instance.async_set_cct(
                 color_temp_k=kwargs[ATTR_COLOR_TEMP_KELVIN], send=False
             )
         elif ATTR_HS_COLOR in kwargs:
+            mode_changed = self._instance.mode != MODE_HSI
             hue, sat = kwargs[ATTR_HS_COLOR]
             await self._instance.async_set_hsi(
                 hue=round(hue / 360 * 255), saturation=round(sat), send=False
@@ -93,7 +96,7 @@ class SuteFotoLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness_pct = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
 
-        await self._instance.async_turn_on(brightness_pct)
+        await self._instance.async_turn_on(brightness_pct, mode_changed=mode_changed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._instance.async_turn_off()
