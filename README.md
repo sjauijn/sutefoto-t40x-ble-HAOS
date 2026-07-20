@@ -19,7 +19,7 @@ The BLE protocol was reverse engineered from BLE HCI snoop logs of the official 
 
 1. HACS → Integrations → ⋮ menu (top right) → **Custom repositories**
 2. Add this repository URL, category **Integration**
-3. Install **SuteFoto LED Light**, restart Home Assistant
+3. Install **SuteFoto T40X RGB BLE**, restart Home Assistant
 
 ## Setup
 
