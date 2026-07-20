@@ -1,11 +1,12 @@
 """SuteFoto T40X BLE protocol encoder.
 
 Reverse engineered from BLE HCI snoop logs of the official "SS LED" app.
+Every value below has been verified byte-for-byte against a real capture.
 
-All commands share the same envelope:
+Envelope shared by all commands:
     FA <opcode> 00 00 00 <payload...> <checksum> 8A
 
-checksum = sum(all bytes between FA and checksum, inclusive of opcode) % 256
+checksum = sum(opcode byte + the three 00 bytes + payload) % 256
 """
 from __future__ import annotations
 
@@ -18,22 +19,18 @@ OPCODE_RGBCW = 0x08
 OPCODE_FX = 0x09
 
 
-def _checksum(body: bytes) -> int:
-    return sum(body) % 256
-
-
 def _build(opcode: int, payload: bytes) -> bytes:
     body = bytes([opcode, 0x00, 0x00, 0x00]) + payload
-    return bytes([HEADER]) + body + bytes([_checksum(body), FOOTER])
+    checksum = sum(body) % 256
+    return bytes([HEADER]) + body + bytes([checksum, FOOTER])
 
 
-def build_hsi(intensity: int, saturation: int, hue: int) -> bytes:
-    """intensity: 0-100, saturation: 0-100, hue: 0-255 (degrees, wraps at 255)."""
+def build_hsi(intensity: int, hue: int, saturation: int) -> bytes:
+    """intensity: 0-100, hue: 0-255 (degrees), saturation: 0-100."""
     intensity = max(0, min(100, int(intensity)))
-    saturation = max(0, min(100, int(saturation)))
     hue = max(0, min(255, int(hue)))
-    payload = bytes([intensity, 0x00, hue, saturation])
-    return _build(OPCODE_HSI, payload)
+    saturation = max(0, min(100, int(saturation)))
+    return _build(OPCODE_HSI, bytes([intensity, 0x00, hue, saturation]))
 
 
 def build_cct(intensity: int, color_temp_k: int, gm_compensation: int) -> bytes:
@@ -43,8 +40,7 @@ def build_cct(intensity: int, color_temp_k: int, gm_compensation: int) -> bytes:
     gm_byte = int(gm_compensation) & 0xFF
     ct_hi = (color_temp_k >> 8) & 0xFF
     ct_lo = color_temp_k & 0xFF
-    payload = bytes([intensity, ct_hi, ct_lo, gm_byte])
-    return _build(OPCODE_CCT, payload)
+    return _build(OPCODE_CCT, bytes([intensity, ct_hi, ct_lo, gm_byte]))
 
 
 def build_rgbcw(
@@ -60,5 +56,4 @@ def build_fx(effect_id: int, frequency: int, intensity: int) -> bytes:
     effect_id = max(1, min(10, int(effect_id)))
     frequency = max(1, min(10, int(frequency)))
     intensity = max(10, min(100, int(intensity)))
-    payload = bytes([effect_id, frequency, intensity])
-    return _build(OPCODE_FX, payload)
+    return _build(OPCODE_FX, bytes([effect_id, frequency, intensity]))

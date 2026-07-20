@@ -7,18 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_MAC,
-    DOMAIN,
-    FX_EFFECTS,
-    FX_EFFECTS_REVERSE,
-    MODE_CCT,
-    MODE_FX,
-    MODE_HSI,
-    MODE_RGBCW,
-    MODES,
-)
-from .device import SuteFotoDevice
+from .const import CONF_MAC, DOMAIN
+from .sutefoto import FX_EFFECTS, MODE_CCT, MODE_FX, MODE_HSI, MODE_RGBCW, SuteFotoInstance
 
 PARALLEL_UPDATES = 0
 
@@ -29,6 +19,7 @@ MODE_LABELS = {
     MODE_FX: "FX (Effects)",
 }
 MODE_LABELS_REVERSE = {v: k for k, v in MODE_LABELS.items()}
+FX_EFFECTS_REVERSE = {v: k for k, v in FX_EFFECTS.items()}
 
 
 async def async_setup_entry(
@@ -36,11 +27,11 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    device: SuteFotoDevice = entry.runtime_data
+    instance: SuteFotoInstance = entry.runtime_data
     async_add_entities(
         [
-            SuteFotoModeSelect(device, entry),
-            SuteFotoFxEffectSelect(device, entry),
+            SuteFotoModeSelect(instance, entry),
+            SuteFotoFxEffectSelect(instance, entry),
         ]
     )
 
@@ -48,9 +39,10 @@ async def async_setup_entry(
 class _BaseSelect(SelectEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_assumed_state = True
 
-    def __init__(self, device: SuteFotoDevice, entry: ConfigEntry) -> None:
-        self._device = device
+    def __init__(self, instance: SuteFotoInstance, entry: ConfigEntry) -> None:
+        self._instance = instance
         self._mac = entry.data[CONF_MAC]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac)},
@@ -60,42 +52,39 @@ class _BaseSelect(SelectEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        self.async_on_remove(self._device.add_listener(self.async_write_ha_state))
+        self._instance.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._instance.remove_callback(self.async_write_ha_state)
 
 
 class SuteFotoModeSelect(_BaseSelect):
-    """Select the active light mode: HSI / CCT / RGBCW / FX."""
-
     _attr_translation_key = "mode"
-    _attr_options = [MODE_LABELS[m] for m in MODES]
+    _attr_options = list(MODE_LABELS.values())
 
-    def __init__(self, device: SuteFotoDevice, entry: ConfigEntry) -> None:
-        super().__init__(device, entry)
+    def __init__(self, instance: SuteFotoInstance, entry: ConfigEntry) -> None:
+        super().__init__(instance, entry)
         self._attr_unique_id = f"{self._mac}_mode"
 
     @property
     def current_option(self) -> str:
-        return MODE_LABELS[self._device.state.mode]
+        return MODE_LABELS[self._instance.mode]
 
     async def async_select_option(self, option: str) -> None:
-        mode = MODE_LABELS_REVERSE[option]
-        await self._device.async_set_mode(mode)
+        await self._instance.async_set_mode(MODE_LABELS_REVERSE[option])
 
 
 class SuteFotoFxEffectSelect(_BaseSelect):
-    """Select the active FX effect."""
-
     _attr_translation_key = "fx_effect"
     _attr_options = list(FX_EFFECTS.values())
 
-    def __init__(self, device: SuteFotoDevice, entry: ConfigEntry) -> None:
-        super().__init__(device, entry)
+    def __init__(self, instance: SuteFotoInstance, entry: ConfigEntry) -> None:
+        super().__init__(instance, entry)
         self._attr_unique_id = f"{self._mac}_fx_effect"
 
     @property
     def current_option(self) -> str:
-        return FX_EFFECTS[self._device.state.fx_effect]
+        return FX_EFFECTS[self._instance.fx_effect]
 
     async def async_select_option(self, option: str) -> None:
-        effect_id = FX_EFFECTS_REVERSE[option]
-        await self._device.async_set_fx(effect_id=effect_id)
+        await self._instance.async_set_fx(effect_id=FX_EFFECTS_REVERSE[option])
