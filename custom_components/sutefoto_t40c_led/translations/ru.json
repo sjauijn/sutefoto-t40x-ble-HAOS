@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Добавить SuteFoto LED",
+        "description": "Поблизости обнаружено устройство. Выберите его, либо выберите ручной ввод, чтобы указать MAC-адрес вручную.",
+        "data": {
+          "mac": "Устройство"
+        }
+      },
+      "manual": {
+        "title": "Введите MAC-адрес",
+        "description": "Введите Bluetooth MAC-адрес вашего света SuteFoto (его можно найти через приложение-сканер, например nRF Connect — ищите устройство с именем вида ST40CRGB-XXXXXX).",
+        "data": {
+          "mac": "MAC-адрес"
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Обнаружен SuteFoto LED",
+        "description": "Настроить {name}? Home Assistant подключится к нему, чтобы убедиться, что всё работает."
+      }
+    },
+    "error": {
+      "invalid_mac": "Неверный формат MAC-адреса. Ожидается что-то вроде AA:BB:CC:DD:EE:FF.",
+      "not_found": "Устройство сейчас не видно по Bluetooth. Убедитесь, что оно включено и находится в радиусе действия, и что оно не подключено к приложению SS LED на телефоне.",
+      "cannot_connect": "Не удалось подключиться к свету. Убедитесь, что он не подключён сейчас к приложению SS LED (BLE допускает только одно подключение одновременно), и попробуйте снова."
+    },
+    "abort": {
+      "already_configured": "Этот свет уже настроен"
+    }
+  },
+  "entity": {
+    "select": {
+      "mode": {
+        "name": "Режим"
+      },
+      "fx_effect": {
+        "name": "FX эффект"
+      }
+    },
+    "number": {
+      "gm_compensation": {
+        "name": "Компенсация Green/Magenta"
+      },
+      "rgbcw_red": {
+        "name": "RGBCW Красный"
+      },
+      "rgbcw_green": {
+        "name": "RGBCW Зелёный"
+      },
+      "rgbcw_blue": {
+        "name": "RGBCW Синий"
+      },
+      "rgbcw_less_warm": {
+        "name": "RGBCW Less Warm"
+      },
+      "rgbcw_more_warm": {
+        "name": "RGBCW More Warm"
+      },
+      "fx_frequency": {
+        "name": "FX Частота"
+      }
+    }
+  }
+}

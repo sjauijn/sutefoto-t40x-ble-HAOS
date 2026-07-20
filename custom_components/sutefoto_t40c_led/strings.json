@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add SuteFoto LED",
+        "description": "A light was discovered nearby. Select it, or choose manual entry to type a MAC address.",
+        "data": {
+          "mac": "Light"
+        }
+      },
+      "manual": {
+        "title": "Enter MAC address",
+        "description": "Enter the Bluetooth MAC address of your SuteFoto light (find it with a BLE scanner app, e.g. nRF Connect — look for a device named like ST40CRGB-XXXXXX).",
+        "data": {
+          "mac": "MAC address"
+        }
+      },
+      "bluetooth_confirm": {
+        "title": "Discovered SuteFoto LED",
+        "description": "Do you want to set up {name}? Home Assistant will connect to it to confirm it works."
+      }
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format. Expected something like AA:BB:CC:DD:EE:FF.",
+      "not_found": "This device is not currently visible over Bluetooth. Make sure it is powered and in range, and that it is not connected to the SS LED phone app.",
+      "cannot_connect": "Could not connect to the light. Make sure it is not currently connected to the SS LED phone app (only one Bluetooth connection is allowed at a time), and try again."
+    },
+    "abort": {
+      "already_configured": "This light is already configured"
+    }
+  },
+  "entity": {
+    "select": {
+      "mode": {
+        "name": "Mode"
+      },
+      "fx_effect": {
+        "name": "FX Effect"
+      }
+    },
+    "number": {
+      "gm_compensation": {
+        "name": "Green/Magenta Compensation"
+      },
+      "rgbcw_red": {
+        "name": "RGBCW Red"
+      },
+      "rgbcw_green": {
+        "name": "RGBCW Green"
+      },
+      "rgbcw_blue": {
+        "name": "RGBCW Blue"
+      },
+      "rgbcw_less_warm": {
+        "name": "RGBCW Less Warm"
+      },
+      "rgbcw_more_warm": {
+        "name": "RGBCW More Warm"
+      },
+      "fx_frequency": {
+        "name": "FX Frequency"
+      }
+    }
+  }
+}
