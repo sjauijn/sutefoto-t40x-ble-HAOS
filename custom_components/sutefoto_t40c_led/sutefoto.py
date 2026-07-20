@@ -1,4 +1,3 @@
-"""BLE connection and state for a single SuteFoto T40C light."""
 from __future__ import annotations
 
 import asyncio
@@ -19,7 +18,10 @@ MODE_CCT = "cct"
 MODE_RGBCW = "rgbcw"
 MODE_FX = "fx"
 
+FX_EFFECT_OFF = 0
+
 FX_EFFECTS: dict[int, str] = {
+    0: "Off",
     1: "Lightning",
     2: "Police",
     3: "Fire truck",
@@ -34,19 +36,13 @@ FX_EFFECTS: dict[int, str] = {
 
 
 class SuteFotoInstance:
-    """Owns the BLE connection to one light and its (assumed) state.
-
-    The light has no way to report its actual state back to us, so all
-    state here is optimistic: we assume a write succeeded if it didn't
-    raise, and we reflect that assumption immediately in the entities.
-    """
 
     def __init__(self, ble_device: BLEDevice) -> None:
         self._ble_device = ble_device
         self._client: BleakClientWithServiceCache | None = None
         self._lock = asyncio.Lock()
 
-        # --- assumed state ---
+
         self.is_on: bool = False
         self.mode: str = MODE_HSI
         self.brightness_pct: int = 100
@@ -64,7 +60,7 @@ class SuteFotoInstance:
         self.rgbcw_less_warm: int = 0
         self.rgbcw_more_warm: int = 0
 
-        self.fx_effect: int = 1
+        self.fx_effect: int = FX_EFFECT_OFF
         self.fx_frequency: int = 5
 
         self._update_callbacks: list = []
@@ -84,7 +80,6 @@ class SuteFotoInstance:
             cb()
 
     async def async_connect(self) -> None:
-        """Establish (or verify) the BLE connection. Raises on failure."""
         if self._client is not None and self._client.is_connected:
             return
         async with self._lock:
@@ -105,7 +100,6 @@ class SuteFotoInstance:
         self._client = None
 
     async def _write(self, data: bytes) -> None:
-        """Write a command, (re)connecting if necessary. Raises on failure."""
         async with self._lock:
             if self._client is None or not self._client.is_connected:
                 self._client = await establish_connection(
@@ -141,16 +135,10 @@ class SuteFotoInstance:
         else:
             return
 
-        # Update the UI immediately: this device cannot report its real
-        # state back, so we treat our own command as authoritative right
-        # away. We do NOT wait for the BLE write, because BLE writes can
-        # take many seconds or silently hang, and if we waited the UI
-        # would look "stuck on the old value" for that whole time - which
-        # is exactly the symptom we're avoiding here.
+
         self._push_update()
         await self._write(data)
 
-    # -- Public commands, each raises on BLE failure so callers can report it --
 
     async def async_turn_on(self, brightness_pct: int | None = None) -> None:
         self.is_on = True
@@ -174,6 +162,12 @@ class SuteFotoInstance:
     async def async_set_mode(self, mode: str, send: bool = True) -> None:
         if self.mode == MODE_RGBCW and mode != MODE_RGBCW:
             self._reset_rgbcw()
+        if self.mode == MODE_FX and mode != MODE_FX:
+            self.fx_effect = FX_EFFECT_OFF
+        if mode == MODE_FX:
+            self.mode = mode
+            self._push_update()
+            return
         self.mode = mode
         if send:
             await self._send_current_mode()
@@ -244,6 +238,9 @@ class SuteFotoInstance:
         frequency: int | None = None,
         intensity: int | None = None,
     ) -> None:
+        if effect_id == FX_EFFECT_OFF:
+            self._push_update()
+            return
         if effect_id is not None:
             self.fx_effect = effect_id
         if frequency is not None:

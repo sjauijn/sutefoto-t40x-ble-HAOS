@@ -1,4 +1,3 @@
-"""Number platform for SuteFoto LED: extra tunable parameters."""
 from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity, NumberMode

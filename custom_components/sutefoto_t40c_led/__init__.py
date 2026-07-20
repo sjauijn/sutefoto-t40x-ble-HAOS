@@ -1,4 +1,3 @@
-"""The SuteFoto LED integration."""
 from __future__ import annotations
 
 import logging
@@ -20,7 +19,6 @@ type SuteFotoConfigEntry = ConfigEntry[SuteFotoInstance]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SuteFotoConfigEntry) -> bool:
-    """Set up SuteFoto LED from a config entry."""
     mac = entry.data[CONF_MAC]
 
     ble_device = bluetooth.async_ble_device_from_address(hass, mac, connectable=True)
@@ -33,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SuteFotoConfigEntry) -> 
 
     try:
         await instance.async_connect()
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:  
         raise ConfigEntryNotReady(
             f"Could not connect to SuteFoto LED light {mac}: {err}"
         ) from err
@@ -61,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SuteFotoConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SuteFotoConfigEntry) -> bool:
-    """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok and entry.runtime_data is not None:
         await entry.runtime_data.async_disconnect()

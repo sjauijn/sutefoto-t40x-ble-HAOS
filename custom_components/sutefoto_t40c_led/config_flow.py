@@ -1,4 +1,3 @@
-"""Config flow for SuteFoto LED integration."""
 from __future__ import annotations
 
 import logging
@@ -23,7 +22,6 @@ MANUAL_ENTRY = "__manual__"
 
 
 async def _async_validate_device(hass, mac: str) -> str | None:
-    """Try to actually connect to the device. Return an error key, or None on success."""
     ble_device = async_ble_device_from_address(hass, mac, connectable=True)
     if ble_device is None:
         return "not_found"
@@ -31,7 +29,7 @@ async def _async_validate_device(hass, mac: str) -> str | None:
     instance = SuteFotoInstance(ble_device)
     try:
         await instance.async_connect()
-    except Exception:  # noqa: BLE001 - any BLE failure means "can't set this up"
+    except Exception:  
         _LOGGER.debug("Could not connect to %s during setup", mac, exc_info=True)
         return "cannot_connect"
     finally:
@@ -40,7 +38,6 @@ async def _async_validate_device(hass, mac: str) -> str | None:
 
 
 class SuteFotoConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for SuteFoto LED."""
 
     VERSION = 1
 
@@ -51,12 +48,6 @@ class SuteFotoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
-        """Handle discovery via Bluetooth advertisement.
-
-        Note: the light advertises over BLE whenever it has power, whether
-        or not its LEDs are currently on - this step only means "a light was
-        seen nearby", not "a light is currently lit".
-        """
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
         self._discovered_mac = discovery_info.address
@@ -86,7 +77,6 @@ class SuteFotoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initiated by the user: pick a discovered device or enter manually."""
         discovered: dict[str, str] = {}
         for info in async_discovered_service_info(self.hass, connectable=True):
             name = (info.name or "").upper()
@@ -127,7 +117,6 @@ class SuteFotoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle manual MAC address entry, with real connection validation."""
         errors: dict[str, str] = {}
 
         if user_input is not None:

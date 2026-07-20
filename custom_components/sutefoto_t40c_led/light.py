@@ -1,4 +1,3 @@
-"""Light platform for SuteFoto LED."""
 from __future__ import annotations
 
 from typing import Any
@@ -31,7 +30,6 @@ async def async_setup_entry(
 
 
 class SuteFotoLight(LightEntity):
-    """The light entity (HSI + CCT color modes). No state read-back exists."""
 
     _attr_has_entity_name = True
     _attr_name = None
