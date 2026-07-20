@@ -1,7 +1,7 @@
 {
   "domain": "sutefoto_t40x_led",
   "name": "SuteFoto T40X RGB BLE",
-  "codeowners": sjauijn,
+  "codeowners": [@sjauijn],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://github.com/sjauijn/sutefoto-t40x-ble-HAOS",
