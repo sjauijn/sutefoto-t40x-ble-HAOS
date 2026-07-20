@@ -48,6 +48,8 @@ class SuteFotoInstance:
         self.brightness_pct: int = 100
         self._last_brightness_pct: int = 100
 
+        self.available: bool = True
+
         self.hue: int = 0
         self.saturation: int = 100
 
@@ -67,6 +69,13 @@ class SuteFotoInstance:
 
     def set_ble_device(self, ble_device: BLEDevice) -> None:
         self._ble_device = ble_device
+
+    def set_available(self, available: bool) -> None:
+        if self.available != available:
+            self.available = available
+            if not available:
+                self._client = None
+            self._push_update()
 
     def register_callback(self, callback) -> None:
         self._update_callbacks.append(callback)

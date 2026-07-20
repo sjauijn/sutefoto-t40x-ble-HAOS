@@ -56,6 +56,10 @@ class _BaseSelect(SelectEntity):
     async def async_will_remove_from_hass(self) -> None:
         self._instance.remove_callback(self.async_write_ha_state)
 
+    @property
+    def available(self) -> bool:
+        return self._instance.available
+
 
 class SuteFotoModeSelect(_BaseSelect):
     _attr_translation_key = "mode"

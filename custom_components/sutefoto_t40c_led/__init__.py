@@ -44,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SuteFotoConfigEntry) -> 
         change: bluetooth.BluetoothChange,
     ) -> None:
         instance.set_ble_device(service_info.device)
+        instance.set_available(True)
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -51,6 +52,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SuteFotoConfigEntry) -> 
             _async_update_ble,
             {"address": mac},
             bluetooth.BluetoothScanningMode.PASSIVE,
+        )
+    )
+
+    @callback
+    def _async_device_unavailable(
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+    ) -> None:
+        instance.set_available(False)
+
+    entry.async_on_unload(
+        bluetooth.async_track_unavailable(
+            hass, _async_device_unavailable, mac, connectable=True
         )
     )
 

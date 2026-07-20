@@ -61,6 +61,10 @@ class SuteFotoLight(LightEntity):
         return self._instance.is_on
 
     @property
+    def available(self) -> bool:
+        return self._instance.available
+
+    @property
     def brightness(self) -> int:
         return round(self._instance.brightness_pct * 255 / 100)
 
